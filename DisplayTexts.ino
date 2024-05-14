@@ -60,3 +60,41 @@ void ScoreTable() {
   display.println("Green Team: " + String(greenScore));
   display.display();
 }
+
+void gameRunningDisplay() { //Switch between showing scoreboard and remaining time
+  static bool displaySwitch = true;
+  static unsigned long previousSwitch = 0;
+  static boolean ledState = LOW;
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousSwitch >= (displaySwitch ? 5000 : 5000)) {
+    displaySwitch = !displaySwitch;
+    previousSwitch = currentMillis;
+  }
+
+if (displaySwitch) {
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(WHITE);  
+  display.setCursor(0, 0);
+  display.setTextSize(1.2);
+  display.println(String(hoursRemaining) + "h:" + String(minutesRemaining) + "m");
+  display.println("Owner: ");
+  display.println(zoneOwnerShip);
+  // display.println(String(remainingGameTimeInMillis));
+  display.display();
+}
+
+else {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);  
+  display.setCursor(0, 0);
+  display.println("ScoreBoard");
+  display.println("Red Team: " + String(redScore));
+  display.println("Blue Team: " + String(blueScore));
+  display.println("Yellow Team: " + String(yellowScore));
+  display.println("Green Team: " + String(greenScore));
+  display.display();
+}
+
+}

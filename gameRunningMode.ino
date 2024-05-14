@@ -1,5 +1,6 @@
 void gameRunning() {
-  if (zoneOwnerShip && !currentlyCapturing) ownerShipLEDIndication(zoneOwnerShip, LOW);  //Turn on the light for the owner unless it's currently in capture
+  
+
   bool debug = true;
   readArcadeButtons();  //Readbutton states
   gameTimer();          //Main timer for the game
@@ -8,33 +9,26 @@ void gameRunning() {
 
   if (!redButton.state()) {
     // Red button was pressed
-    handleButtonPress("Red Team", &redButton);
+    oldhandleButtonPress("Red Team", &redButton);
   } else if (!yellowButton.state()) {
     // Yellow button was pressed
-    handleButtonPress("Yellow Team", &yellowButton);
+    oldhandleButtonPress("Yellow Team", &yellowButton);
   } else if (!greenButton.state()) {
     // Green button was pressed
-    handleButtonPress("Green Team", &greenButton);
+    oldhandleButtonPress("Green Team", &greenButton);
   } else if (!blueButton.state()) {
     // Blue button was pressed
-    handleButtonPress("Blue Team", &blueButton);
+    oldhandleButtonPress("Blue Team", &blueButton);
   }
 
 
-
-
-  // if (timer1.timer(1000)) {
-  // Serial.println("Game state" + String(gameState));
-  scoreBoardYellow();
-  // Serial.println("Game time left: " +String(remainingGameTimeInMillis));
-
-
-  // }
-
+  gameRunningDisplay();
 
 
 
 }  //end gamerunning()
+
+//Handle button presses for capture logic. 
 
 void handleButtonPress(String teamName, ButtonDebounce *button) {
   if (!anyCaptureButtonPressedFlag) {  //Only runs once per button press. Flag function.
@@ -48,31 +42,73 @@ void handleButtonPress(String teamName, ButtonDebounce *button) {
   }
 
   if (anyCaptureButtonPressedFlag && activeButton == button) {  // button is still being pressed
-    blinkLED(500, 500);                                           // blink LED on/off every 500ms. Uses global currently Capturing in function
+    blinkLED(500, 500);  // blink LED on/off every 500ms. Uses global currently Capturing in function
     unsigned long elapsedTime = millis() - startTime;
     if (elapsedTime >= captureTimeSeconds * 1000) {
       zoneOwnerShip = teamName;
-      ownerShipLEDIndication(zoneOwnerShip, true);
+      ownerShipLEDIndication(zoneOwnerShip, false); //Light up the button for the owner. Inverse logic due to INPUT_PULLUP on relay board.
       Serial.print(F("Zone Captured by "));
       Serial.println(teamName);
       activeButton = NULL;      // reset the active button
       currentlyCapturing = "";  //Reset currently capturing
       anyCaptureButtonPressedFlag = false;
-    }  // end if
-
-  }                           // end else if
-  else {                      // a different button was pressed while another was active
+      startTime = 0;
+    }
+  }
+  else if (!button->state() && activeButton == button) { // Button was released and was being actively captured
     activeButton = NULL;      // reset the active button
     currentlyCapturing = "";  //Reset currently capturing
     anyCaptureButtonPressedFlag = false;
+    startTime = 0;
+    elapsedTime = 0;
+    ownerShipLEDIndication(zoneOwnerShip, false);   //Turn on the light for the owner unless it's currently in capture
+  }
+}  // end handleButtonPress()
+
+
+void oldhandleButtonPress(String teamName, ButtonDebounce *button) {
+  if (!anyCaptureButtonPressedFlag) {  //Only runs once per button press. Flag function.
+    currentlyCapturing = teamName;
+    if (currentlyCapturing != zoneOwnerShip) { //Check that the same team isn't capturing it's own zone.
+      Serial.println(teamName + " Capturing");
+      startTime = millis();   // save the start time
+      activeButton = button;  // set the active button
+      anyCaptureButtonPressedFlag = true;
+    }
+  }
+
+  if (anyCaptureButtonPressedFlag && activeButton == button) {  // button is still being pressed
+    blinkLED(500, 500);                                           // blink LED on/off every 500ms. Uses global currently Capturing in function
+    elapsedTime = millis() - startTime;
+    if (elapsedTime >= captureTimeSeconds * 1000) {
+      zoneOwnerShip = teamName;
+      ownerShipLEDIndication(zoneOwnerShip, false); //Light up the button for the owner. Inverse logic due to INPUT_PULLUP on relay board.
+      Serial.print(F("Zone Captured by "));
+      Serial.println(teamName);
+      activeButton = NULL;      // reset the active button
+      currentlyCapturing = "";  //Reset currently capturing
+      anyCaptureButtonPressedFlag = false;
+      startTime = 0; //JUST ADDED THIS. REMOVE IF IT DOESN*T WORK
+    }  // end if
+
+  }                           // end else if
+  else {                      // Button was released
+    activeButton = NULL;      // reset the active button
+    currentlyCapturing = "";  //Reset currently capturing
+    anyCaptureButtonPressedFlag = false;  
+    startTime = 0; //JUST ADDED THIS. REMOVE IF IT DOESN*T WORK
+  elapsedTime = 0;
+    ownerShipLEDIndication(zoneOwnerShip, false);   //Turn on the light for the owner unless it's currently in capture
   }  // end else
 }  // end handleButtonPress()
 
+//Adds score each time interval to the team if a zone has a owner.
 void scoreCounter() {
   static unsigned long lastScoreTime = 0;
 
   if (millis() - lastScoreTime >= scoreIntervalSeconds * 1000) {
     lastScoreTime = millis();
+    printExtendedDebugData();
     if (zoneOwnerShip.equals("Red Team")) {
       Serial.println(F("Red Scored a point"));
       redScore++;

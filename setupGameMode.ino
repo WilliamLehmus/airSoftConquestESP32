@@ -24,7 +24,6 @@ void setupGameMode() {
 }
 
 void setupGameTimeHours() {
-  // blockEnterButton = true;
   display.clearDisplay();
   // display.setTextColor(WHITE);  
   display.setTextSize(2);
@@ -33,10 +32,9 @@ void setupGameTimeHours() {
   display.println(String(gameTimeHours) + "h:" + String(gameTimeMinutes));
 
   //Add
-  if (redButton.state() == LOW) {    
+  if (redButton.state() == LOW) {     
       gameTimeHours++;
-      delay(350);
-      blockEnterButton = false;
+      delay(buttonRepeatDelay);
       Serial.println("Hours: " + String(gameTimeHours) + " Minutes: " + String(gameTimeMinutes));
   }
 
@@ -44,8 +42,7 @@ void setupGameTimeHours() {
     if (blueButton.state() == LOW) {
       gameTimeHours--;
       if (gameTimeHours < 0) gameTimeHours = 0; //Don't allow gametime hours to be negative
-      delay(350);
-      blockEnterButton = false;
+      delay(buttonRepeatDelay);
       Serial.println("Hours: " + String(gameTimeHours) + " Minutes: " + String(gameTimeMinutes));
   }
     //Cancel
@@ -66,17 +63,20 @@ void setupGameTimeHours() {
 
 void setupGameTimeMinutes() {
     //SETUP GAME TIME HOURS
-    // blockEnterButton = true;
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0, 0);
   display.println(F("Minutes"));
   display.println(String(gameTimeHours) + "h:" + String(gameTimeMinutes) + "m");
 
+  if (yellowButton.state() == HIGH && blockEnterButton) {
+    blockEnterButton = false;
+}
+
   if (redButton.state() == LOW) {
       gameTimeMinutes++;
       if (gameTimeMinutes > 59) gameTimeMinutes = 0;
-      delay(200);
+      delay(buttonRepeatDelay);
       blockEnterButton = false;
       
   }
@@ -84,7 +84,7 @@ void setupGameTimeMinutes() {
     if (blueButton.state() == LOW) {
       gameTimeMinutes--;
       if (gameTimeMinutes < 0) gameTimeMinutes = 0; //Don't allow gametime hours to be negative
-      delay(200);
+      delay(buttonRepeatDelay);
       blockEnterButton = false;
   }
 
@@ -103,24 +103,27 @@ void setupGameTimeMinutes() {
 
 void setupCaptureTimeSeconds() {
     //SETUP GAME TIME HOURS
-    // blockEnterButton = true;
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0, 0);
   display.println(F("Cap time"));
   display.println(String(captureTimeSeconds) + "s") ;
 
+  if (yellowButton.state() == HIGH && blockEnterButton) {
+    blockEnterButton = false;
+}
+
   if (redButton.state() == LOW) {
       captureTimeSeconds++;
-      delay(100);
-      blockEnterButton = false;
+      delay(buttonRepeatDelay);
+
   }
 
     if (blueButton.state() == LOW) {
       captureTimeSeconds--;
       if (captureTimeSeconds < 0) captureTimeSeconds = 0; //Don't allow gametime hours to be negative
-      delay(100);
-      blockEnterButton = false;
+      delay(buttonRepeatDelay);
+ 
   }
 
     if (greenButton.state() == LOW) {
@@ -152,13 +155,16 @@ void setupSummary() {
   display.println("   OK?");
   Serial.println(F("Showing Game Summary"));
   display.display(); //Update display
-  delay(1000);
+
+  if (yellowButton.state() == HIGH && blockEnterButton) { //Wait for user to release button before moving on
+    blockEnterButton = false;
+}
 
     if (redButton.state() == LOW) {
       setupFlow = 0;
   }
 
-      if (greenButton.state() == LOW ) {
+       if (yellowButton.state() == LOW && blockEnterButton == false) {
       Serial.println(F("Confirmed Summary"));
       remainingTimeMinutes = gameTimeHours * 60 + gameTimeMinutes; // convert hours to minutes and add to minutes
       gameState = 1; //SETUP DONE

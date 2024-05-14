@@ -7,3 +7,23 @@ void byPassSetup() {
   gameState = 1; //Setup done. Go to gameRunning mode.
 
 }
+
+void printExtendedDebugData() {
+  Serial.println("#################################");
+  Serial.println("Zone Owner: " + zoneOwnerShip);
+  Serial.println("Currently Capturing: " + currentlyCapturing);
+  Serial.println("anyCaptureButtonPressedFlag: " + String(anyCaptureButtonPressedFlag));
+  Serial.println("remainingGameTimeInMillis: " + String(remainingGameTimeInMillis));
+  Serial.println("startTime: " + String(startTime));
+
+
+
+
+
+  Serial.println("#################################");
+
+
+
+
+
+}
